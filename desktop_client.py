@@ -52,6 +52,18 @@ def admin_mi():
     except:
         return False
 
+def discord_bul():
+    # normal discord kuruluysa onu acmak daha iyi, browser hissi olmuyor
+    local = os.environ.get("LOCALAPPDATA", "")
+    adaylar = [
+        Path(local) / "Discord" / "Update.exe",
+        Path(os.environ.get("PROGRAMFILES", "")) / "Discord" / "Discord.exe",
+    ]
+    for a in adaylar:
+        if a.exists():
+            return a
+    return None
+
 def browser_bul():
     for n in ["msedge.exe", "chrome.exe", "firefox.exe"]:
         p = which(n)
@@ -83,14 +95,26 @@ def main():
 
     print("tamam discord geliyor")
     url = "https://discord.com/app"
-    b = browser_bul()
+    dc = discord_bul()
     try:
-        if b and "firefox" not in b.lower():
-            subprocess.Popen([b, "--app=" + url])
+        if dc and dc.name.lower() == "update.exe":
+            subprocess.Popen([str(dc), "--processStart", "Discord.exe"])
+        elif dc:
+            subprocess.Popen([str(dc)])
+            time.sleep(2)
+            b = browser_bul()
+            if b and "firefox" not in b.lower():
+                subprocess.Popen([b, "--app=" + url])
+            else:
+                webbrowser.open(url)
         else:
-            webbrowser.open(url)
+            b = browser_bul()
+            if b and "firefox" not in b.lower():
+                subprocess.Popen([b, "--app=" + url])
+            else:
+                webbrowser.open(url)
     except Exception as e:
-        print("browser acilmadi:", e)
+        print("acilamadi:", e)
         print("sunla gir:", url)
 
     print("cikmak icin enter'a bas, arkadaki de kapaniyor")
