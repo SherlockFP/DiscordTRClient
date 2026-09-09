@@ -86,7 +86,11 @@ def main():
         return
 
     print("aciliyor, bekle...")
-    proc = subprocess.Popen([str(GB_EXE)] + GB_ARGS, cwd=str(GB_DIR))
+    # goodbyedpi penceresi cikmasin diye gizli baslatiyorum
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    proc = subprocess.Popen([str(GB_EXE)] + GB_ARGS, cwd=str(GB_DIR),
+        startupinfo=si, creationflags=subprocess.CREATE_NO_WINDOW)
     time.sleep(1.5)
     if proc.poll() is not None:
         print("goodbyedpi hemen kapandi, baska biri acik kalmis olabilir")
@@ -96,30 +100,41 @@ def main():
     print("tamam discord geliyor")
     url = "https://discord.com/app"
     dc = discord_bul()
+    discord_proc = None
     try:
         if dc and dc.name.lower() == "update.exe":
             subprocess.Popen([str(dc), "--processStart", "Discord.exe"])
+            time.sleep(4)
         elif dc:
-            subprocess.Popen([str(dc)])
+            discord_proc = subprocess.Popen([str(dc)])
             time.sleep(2)
-            b = browser_bul()
-            if b and "firefox" not in b.lower():
-                subprocess.Popen([b, "--app=" + url])
-            else:
-                webbrowser.open(url)
         else:
             b = browser_bul()
             if b and "firefox" not in b.lower():
-                subprocess.Popen([b, "--app=" + url])
+                discord_proc = subprocess.Popen([b, "--app=" + url])
             else:
                 webbrowser.open(url)
     except Exception as e:
         print("acilamadi:", e)
         print("sunla gir:", url)
 
-    print("cikmak icin enter'a bas, arkadaki de kapaniyor")
+    # discord kapaninca biz de kapanalim, enter beklemeye gerek yok
+    print("discord acik kaldigi surece calisiyor, kapatinca bu da duruyor")
+    baslangic = time.time()
     try:
-        input()
+        while True:
+            time.sleep(5)
+            # kendi actigimiz sey yasıyor mu
+            if discord_proc is not None and discord_proc.poll() is not None:
+                break
+            # Update.exe hemen cikip Discord.exe kaliyor, onu kontrol et
+            if discord_proc is None:
+                c = subprocess.run(["tasklist", "/FI", "IMAGENAME eq Discord.exe"],
+                    capture_output=True, text=True)
+                if "Discord.exe" not in c.stdout:
+                    # ilk 30 sn acilis payi birak
+                    if time.time() - baslangic > 30:
+                        break
     except:
         pass
     print("kapaniyor...")
