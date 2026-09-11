@@ -43,8 +43,8 @@ else:
     BLACKLIST = BASE / "discord_blacklist.txt"
 
 # sadece discord listesine dokunuyor, gerisine karismiyor
-GB_ARGS = ["-p", "-r", "-s", "-m", "--blacklist", str(BLACKLIST),
-    "--dns-addr", "77.88.8.8", "--dns-port", "1253"]
+# dns yonlendirme yok, oyunda lag yapiyordu o yuzden kaldirdim
+GB_ARGS = ["-p", "-s", "--blacklist", str(BLACKLIST)]
 
 def admin_mi():
     try:
